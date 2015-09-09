@@ -5,7 +5,7 @@ self.addEventListener('push', function(event) {
 
   var title = 'push-messenger';
   var body = 'You\'ve got a message';
-  var icon = '/img/gouchi.jpg';
+  var icon = '/img/sax.jpg';
   var tag = 'tag';
 
   event.waitUntil(
