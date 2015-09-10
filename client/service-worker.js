@@ -1,11 +1,16 @@
 'use strict';
 
+/*
+*Written by Ryoma
+*2015/9/9
+*/
+
 self.addEventListener('push', function(event) {
   console.log('Received a push message', event);
 
   var title = 'push-messenger';
-  var body = 'You\'ve got a message';
-  var icon = '/img/sax.jpg';
+  var body = "You've got a message";
+  var icon = '/img/gouchi.jpg';
   var tag = 'tag';
 
   event.waitUntil(
@@ -30,13 +35,14 @@ self.addEventListener('notificationclick', function(event) {
   event.waitUntil(clients.matchAll({
     type: "window"
   }).then(function(clientList) {
+    console.log(clientList);
     for (var i = 0; i < clientList.length; i++) {
       var client = clientList[i];
-      if (client.url == './index.html' && 'focus' in client)
+      if (client.url == 'https://push-messenger-noifuji.c9.io/' && 'focus' in client)
         return client.focus();
     }
     if (clients.openWindow)
-      return clients.openWindow('./index.html');
+      return clients.openWindow('./');
   }));
   
 

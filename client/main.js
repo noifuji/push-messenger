@@ -1,11 +1,12 @@
 /*
 *Written by Ryoma
-*2015/9/8
+*2015/9/9
 */
 var API_KEY = 'AIzaSyDDgYaIYetAHiJIoF_egwBJwGFSQgw29VI';
 var GCM_ENDPOINT = 'https://android.googleapis.com/gcm/send';
 
 var curlCommandDiv;
+var sendCurlCommandDiv;
 var isPushEnabled = false;
 var TEXT_ENABLE_NOTIFICATION = 'Enable push messages';
 var TEXT_DISABLE_NOTIFICATION = 'Disable push messages';
@@ -21,6 +22,8 @@ window.addEventListener('load', function() {
       subscribe();
     }
   });
+  
+
 
   // Check that service workers are supported, if so, progressively
   // enhance and add push messaging support, otherwise continue without it.
@@ -67,11 +70,14 @@ function initialiseState() {
         }
 
         // Keep your server in sync with the latest subscriptionId
-        //sendSubscriptionToServer(subscription);
-
-        var mergedEndpoint = endpointWorkaround(subscription);
+        sendEndpointToServer(subscription);
         
-        showCurlCommand(mergedEndpoint);
+         var sendCurlButton = document.querySelector('.send-curl-button');
+         sendCurlButton.disabled = false;
+         sendCurlButton.addEventListener('click', function() {
+          var socket = io.connect();
+          socket.emit('request');
+        });
 
         // Set your UI to show they have subscribed for
         // push messages
@@ -97,14 +103,21 @@ function subscribe() {
         pushButton.textContent = TEXT_DISABLE_NOTIFICATION;
         pushButton.disabled = false;
 
-        var mergedEndpoint = endpointWorkaround(subscription);
-        
-        showCurlCommand(mergedEndpoint);
+        //var mergedEndpoint = endpointWorkaround(subscription); @Delete
+        //showCurlCommand(mergedEndpoint);                       @Delete
+
+        var sendCurlButton = document.querySelector('.send-curl-button');
+        sendCurlButton.disabled = false;
+        sendCurlButton.addEventListener('click', function() {
+          var socket = io.connect();
+          socket.emit('request');
+        });
 
         // TODO: Send the subscription.subscriptionId and 
         // subscription.endpoint to your server
         // and save it to send a push message at a later date
-        //return sendSubscriptionToServer(subscription);
+        sendEndpointToServer(subscription);
+        
         return;
       })
       .catch(function(e) {
@@ -129,6 +142,8 @@ function subscribe() {
 function unsubscribe() {
   var pushButton = document.querySelector('.js-push-button');
   pushButton.disabled = true;
+  var sendCurlButton = document.querySelector('.send-curl-button');
+  sendCurlButton.disabled = true;
   curlCommandDiv.textContent = '';
 
   navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
@@ -150,6 +165,7 @@ function unsubscribe() {
         // TODO: Make a request to your server to remove
         // the subscriptionId from your data store so you 
         // don't attempt to send them push messages anymore
+        deleteEndpointFromServer(pushSubscription);
 
         // We have a subcription, so call unsubscribe on it
         pushSubscription.unsubscribe().then(function(successful) {
@@ -214,4 +230,27 @@ function endpointWorkaround(pushSubscription) {
       pushSubscription.subscriptionId;
   }
   return mergedEndpoint;
+}
+
+//Chrome 44 later
+function getEndpoint(pushSubscription) {
+  var mergedEndpoint = endpointWorkaround(pushSubscription);
+  var endpointSections = mergedEndpoint.split('/');
+  var subscriptionId = endpointSections[endpointSections.length - 1];
+  
+  return subscriptionId;
+}
+
+//Sends request to register the endpoint.
+function sendEndpointToServer(subscription) {
+  var endpoint = getEndpoint(subscription);
+  var socket = io.connect();
+    socket.emit('register_endpoint', endpoint);
+}
+
+//Sends request to delete the endpoint on the server.
+function deleteEndpointFromServer(subscription) {
+  var endpoint = getEndpoint(subscription);
+  var socket = io.connect();
+    socket.emit('delete_endpoint', endpoint);
 }
