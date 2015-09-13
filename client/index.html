@@ -1,32 +1,47 @@
-<!--こんなかんじのデザインでどうだろうか。　ログイン画面はダイアログでいいかも。-Ryoma-->
+<!--テストページです。触るな危険。-Ryoma-->
 
 <!DOCTYPE html>
-<html class="">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="robots" content="noindex">
-    <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsenui.css">
-    <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsen-css-components.css">
-    
-    <link rel="stylesheet prefetch" href="main.css">
-  </head>
-  <body ng-app='messenger'>
-<div class="container" ng-controller="MessengerController">
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsenui.css">
+  <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsen-css-components.css">
+
+  <link rel="stylesheet prefetch" href="main.css">
+
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/onsenui/build/js/onsenui.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/jquery.min.js"></script>
+
+  <script src="main.js"></script>
+</head>
+
+<body>
+  <ons-modal var="modal">
+    <ons-icon icon="ion-load-c" spin="true"></ons-icon>
+    <br>
+    <br>Logging in.
+    <br> Please wait.
+  </ons-modal>
 
   <ons-navigator title="Navigator" var="myNavigator">
-    <ons-page>
+    <ons-page id='page_login' ng-controller="LoginController">
       <ons-toolbar>
         <div class="center">Messenger</div>
       </ons-toolbar>
       <div style="text-align: center">
 
         <section style="padding: 8px">
-          <input type="text" class="text-input" ng-model="text" placeholder="User Name" style="display: block; width: 100%">
+          <input type="text" class="text-input" ng-model="username" placeholder="User Name" style="display: block; width: 100%">
         </section>
 
-        <ons-button modifier="light" id="button_login" onclick="myNavigator.pushPage('page1.html', { animation : 'slide' } )">
+        <ons-button type='submit' 　id='btn_login' ng-click="login()" modifier="light">
           Login
         </ons-button>
+
       </div>
     </ons-page>
   </ons-navigator>
@@ -122,75 +137,6 @@
 
     </ons-page>
   </ons-template>
-
-</div>
-
-<script src="bower_components/angular/angular.js"></script>
-<script src="bower_components/onsenui/build/js/onsenui.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/jquery.min.js"></script>
-
-<script src="main.js"></script>
-<script>
-  ons.bootstrap(['messenger']);
-  //@ sourceURL=pen.js
-</script>
 </body>
+
 </html>
-
-<!--
-<!doctype html>
-<html lang="en" ng-app>
-  <head>
-    
-    <title>Chat Example</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
-    <style>
-      body {
-        padding-top: 60px;
-      }
-    </style>
-    <script>
-      function LoginController($scope) {
-        var socket = io.connect();
-
-        $scope.username = '';
-
-        socket.on('logged_in', function (flag) {
-          console.log(flag);
-        });
-
-        $scope.send = function send() {
-          console.log('Sending username:', $scope.username);
-          socket.emit('login', $scope.username);
-          $scope.username = '';
-        };
-      }
-    </script>
-    
-  </head>
-  <body>
-    <div class="container" ng-controller="LoginController">
-      <div class="navbar navbar-fixed-top navbar-inverse">
-        <div class="navbar-inner">
-          <div class="pull-right">
-            <a href="https://c9.io" class="brand">Cloud9 IDE</a>
-          </div>
-        </div>
-      </div>
-            <form ng-submit="send()">
-              <div class="input-append span7">
-                <input type="text" class="span6" ng-model="username" placeholder="UserName">
-                <input type="submit" class="span1 btn btn-primary" value="Send" ng-disabled="!username">
-              </div>
-            </form>
-    </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/angular.min.js"></script>
-  </body>
-</html>
--->

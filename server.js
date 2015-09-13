@@ -25,6 +25,10 @@ var messages = [];
 var sockets = [];
 var endpoints = [];
 
+router.get('/user/:userId', function (req, res) {
+  res.send('userId:' + req.params.userId + ",userName:");
+});
+
 io.on('connection', function(socket) {
   messages.forEach(function(data) {
     socket.emit('message', data);
@@ -81,6 +85,21 @@ io.on('connection', function(socket) {
         endpoints.splice(i, 1);
       }
     }
+  });
+  
+  //Fix it!
+  socket.on('login', function(username) {
+    var user = [{"username" : "ryoma"}, {"username" : "hige"}, {"username" : "okaya"}];
+    
+    var loginFlag = false;
+    for(var i = 0; i < user.length; i++) {
+      if(user[i].username == username) {
+        loginFlag = true;
+        break;
+      }
+    }
+    
+    socket.emit('logged_in', loginFlag);
   });
 
 });

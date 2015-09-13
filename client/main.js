@@ -1,43 +1,35 @@
-var messenger = angular.module('messenger', []);
-
-messenger.controller('MessengerController', function($scope) {
+var messenger = ons.bootstrap('messenger', ['onsen']);
+        
+messenger.controller('LoginController', function($scope) {
 
             var socket = io.connect();
 
             $scope.messages = [];
             $scope.roster = [];
-            $scope.name = '';
-            $scope.text = '';
+            $scope.username = '';
 
             socket.on('connect', function() {
-                $scope.setName();
+                console.log("socket is connected");
+            });
+            
+            socket.on('logged_in', function(flag) {
+                $scope.modal.hide();
+                console.log(flag);
+                if(flag) {
+                    $scope.myNavigator.pushPage('page1.html', { animation : 'slide' } );
+                } else {
+                    alert("Failed to login.");
+                }
+                
             });
 
-            socket.on('message', function(msg) {
-                $scope.messages.push(msg);
-                $scope.$apply();
-            });
-
-            socket.on('roster', function(names) {
-                $scope.roster = names;
-                $scope.$apply();
-            });
-
-            $scope.send = function send() {
-                console.log('Sending message:', $scope.text);
-                socket.emit('message', $scope.text);
-                $scope.text = '';
+            $scope.login = function login() {
+                $scope.showModal();
+                console.log('Sending username:' + $scope.username);
+                socket.emit('login', $scope.username);
             };
-
-            $scope.setName = function setName() {
-                socket.emit('identify', $scope.name);
-            };
+            
+            $scope.showModal = function showModal() {
+                $scope.modal.show();
+            }
         });
-    
-
-window.addEventListener('load', function() {
-  var btnLogin = document.querySelector('#button_login');
-  btnLogin.addEventListener('click', function() {
-      console.log("login clicked");
-  });
-});
