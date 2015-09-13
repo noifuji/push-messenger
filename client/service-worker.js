@@ -38,11 +38,11 @@ self.addEventListener('notificationclick', function(event) {
     console.log(clientList);
     for (var i = 0; i < clientList.length; i++) {
       var client = clientList[i];
-      if (client.url == 'https://push-messenger-noifuji.c9.io/' && 'focus' in client)
+      if (client.url == 'https://push-messenger-noifuji.c9.io/chat.html' && 'focus' in client)
         return client.focus();
     }
     if (clients.openWindow)
-      return clients.openWindow('./');
+      return clients.openWindow('./chat.html');
   }));
   
 

@@ -1,8 +1,147 @@
+<!--こんなかんじのデザインでどうだろうか。　ログイン画面はダイアログでいいかも。-Ryoma-->
+
+<!DOCTYPE html>
+<html class="">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsenui.css">
+    <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsen-css-components.css">
+    
+    <link rel="stylesheet prefetch" href="main.css">
+  </head>
+  <body ng-app='messenger'>
+<div class="container" ng-controller="MessengerController">
+
+  <ons-navigator title="Navigator" var="myNavigator">
+    <ons-page>
+      <ons-toolbar>
+        <div class="center">Messenger</div>
+      </ons-toolbar>
+      <div style="text-align: center">
+
+        <section style="padding: 8px">
+          <input type="text" class="text-input" ng-model="text" placeholder="User Name" style="display: block; width: 100%">
+        </section>
+
+        <ons-button modifier="light" id="button_login" onclick="myNavigator.pushPage('page1.html', { animation : 'slide' } )">
+          Login
+        </ons-button>
+      </div>
+    </ons-page>
+  </ons-navigator>
+
+  <ons-template id="page1.html">
+    <ons-page>
+      <ons-toolbar>
+        <div class="left">
+          <ons-back-button>Back</ons-back-button>
+        </div>
+        <div class="center">Friend List</div>
+      </ons-toolbar>
+
+      <ons-list>
+
+        <ons-list-item modifier="chevron" class="list-item-container" onclick="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
+          <ons-row>
+            <ons-col width="95px">
+              <img src="img/sax.jpg" class="thumbnail">
+            </ons-col>
+            <ons-col>
+              <div class="name">
+                ryoma
+              </div>
+              <div class="desc">
+                Hello!
+              </div>
+            </ons-col>
+            <ons-col width="40px"></ons-col>
+          </ons-row>
+        </ons-list-item>
+
+        <ons-list-item modifier="chevron" class="list-item-container" onclick="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
+          <ons-row>
+            <ons-col width="95px">
+              <img src="img/gouchi.jpg" class="thumbnail">
+            </ons-col>
+            <ons-col>
+              <div class="name">
+                hige
+              </div>
+              <div class="desc">
+                I love Samuragouchi.
+              </div>
+            </ons-col>
+            <ons-col width="40px"></ons-col>
+          </ons-row>
+        </ons-list-item>
+
+        <ons-list-item modifier="chevron" class="list-item-container" onclick="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
+          <ons-row>
+            <ons-col width="95px">
+              <img src="img/icon.jpg" class="thumbnail">
+            </ons-col>
+            <ons-col>
+              <div class="name">
+                okaya
+              </div>
+              <div class="desc">
+                I'm tired.
+              </div>
+            </ons-col>
+            <ons-col width="40px"></ons-col>
+          </ons-row>
+        </ons-list-item>
+
+    </ons-page>
+  </ons-template>
+
+  <ons-template id="page2.html">
+    <ons-page>
+      <ons-toolbar>
+        <div class="left">
+          <ons-back-button>Back</ons-back-button>
+        </div>
+        <div class="center">Talk</div>
+      </ons-toolbar>
+
+      <ons-tabbar hide-tabs="hgoe">
+        <ons-tab>
+          <ons-row>
+            <ons-col width="80%">
+              <input type="text" class="text-input" ng-model="text" placeholder="Type here" style="display: block; width: 100%">
+            </ons-col>
+            <ons-col width="20%">
+              <ons-button style="display: block; width: 100%">Send</ons-button>
+            </ons-col>
+        </ons-tab>
+
+
+      </ons-tabbar>
+      Talk
+
+    </ons-page>
+  </ons-template>
+
+</div>
+
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/onsenui/build/js/onsenui.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/jquery.min.js"></script>
+
+<script src="main.js"></script>
+<script>
+  ons.bootstrap(['messenger']);
+  //@ sourceURL=pen.js
+</script>
+</body>
+</html>
+
+<!--
 <!doctype html>
 <html lang="en" ng-app>
   <head>
-    <!-- Added by Ryoma -->
-    <link rel="manifest" href="manifest.json">
     
     <title>Chat Example</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,46 +153,26 @@
       }
     </style>
     <script>
-      function ChatController($scope) {
+      function LoginController($scope) {
         var socket = io.connect();
 
-        $scope.messages = [];
-        $scope.roster = [];
-        $scope.name = '';
-        $scope.text = '';
+        $scope.username = '';
 
-        socket.on('connect', function () {
-          $scope.setName();
-        });
-
-        socket.on('message', function (msg) {
-          $scope.messages.push(msg);
-          $scope.$apply();
-        });
-
-        socket.on('roster', function (names) {
-          $scope.roster = names;
-          $scope.$apply();
+        socket.on('logged_in', function (flag) {
+          console.log(flag);
         });
 
         $scope.send = function send() {
-          console.log('Sending message:', $scope.text);
-          socket.emit('message', $scope.text);
-          $scope.text = '';
-        };
-
-        $scope.setName = function setName() {
-          socket.emit('identify', $scope.name);
+          console.log('Sending username:', $scope.username);
+          socket.emit('login', $scope.username);
+          $scope.username = '';
         };
       }
     </script>
     
-    <!-- Added by Ryoma -->
-    <script src="main.js"></script>
-    
   </head>
   <body>
-    <div class="container" ng-controller="ChatController">
+    <div class="container" ng-controller="LoginController">
       <div class="navbar navbar-fixed-top navbar-inverse">
         <div class="navbar-inner">
           <div class="pull-right">
@@ -61,49 +180,12 @@
           </div>
         </div>
       </div>
-      <div class="page-header">
-        <h1>Chat Example</h1>
-        
-        <!-- Added by Ryoma -->
-        <button class="js-push-button" disabled>Enable push messages</button>
-        <button class="send-curl-button" disabled>Send Push Notification Request</button>
-        <div class="js-curl-command"></div>
-
-      </div>
-      <div class="row">
-        <div class="span3">
-          <ul class="nav nav-list well">
-            <li class="nav-header">Local Users</li>
-            <li ng-repeat="user in roster" ng-bind="user">
-            </li>
-          </ul>
-        </div>
-        <div class="span9">
-          <table class="table table-striped table-bordered">
-            <thead>
-              <tr>
-                <th class="span2">Name</th>
-                <th class="span7">Text</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat="msg in messages">
-                <td class="span2" ng-bind="msg.name"></td>
-                <td class="span7" ng-bind="msg.text"></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="row controls">
             <form ng-submit="send()">
-              <div class="span2"><input type="text" class="input-block-level" ng-model="name" ng-change="setName()" placeholder="Your Name"></div>
               <div class="input-append span7">
-                <input type="text" class="span6" ng-model="text" placeholder="Message">
-                <input type="submit" class="span1 btn btn-primary" value="Send" ng-disabled="!text">
+                <input type="text" class="span6" ng-model="username" placeholder="UserName">
+                <input type="submit" class="span1 btn btn-primary" value="Send" ng-disabled="!username">
               </div>
             </form>
-          </div>
-        </div>
-      </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/jquery.min.js"></script>
@@ -111,3 +193,4 @@
     <script src="/js/angular.min.js"></script>
   </body>
 </html>
+-->
