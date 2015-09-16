@@ -38,6 +38,7 @@ messenger.controller('LoginController', function($scope, socket, userData) {
 
     var timeoutId = null;
     $scope.userData = userData;
+    $scope.username = "ryoma";
 
     socket.on('connect', function() {
         console.log("socket is connected");
@@ -94,26 +95,44 @@ messenger.controller('TalkRoomController', function($scope, socket, userData) {
 
     $scope.userData = userData
     $scope.messages = [];
-    $scope.message = "";
-    
+    $scope.message = {
+        username: "",
+        text: ""
+    };
+
     var talkContainer = $('#talk-container');
     var talkInnerContainer = $('#talk-inner-container');
-    var msg = $('.msg');
-    var text = $('#global-footer-form-txt'); //あとでdirectiveに書き換える
-    text.focus();
-    
+    var textBox = $('#global-footer-form-txt'); //あとでdirectiveに書き換える
+    textBox.focus();
+
     //送信ボタンクリック
     $scope.send = function send() {
-        text.focus();
-        
-        //空文字ははじく。メッセージを追加して、スクロールする。
-        if ($scope.message != "") {
-            $scope.messages.push($scope.message);
-            talkContainer.animate({
-                scrollTop: talkInnerContainer.height()
-            }, 200);
+        textBox.focus();
+
+        //空文字ははじく。
+        if ($scope.message.text != "") {
+            $scope.message.username = userData.username;
+
+            socket.emit('message', $scope.message);
         }
-        $scope.message = "";
+        $scope.message.text = "";
     }
+
+    //messageオブジェクトの形式がサーバーとクライアントで異なっているので、修正する。
+    socket.on("message", function(msg) {
+        console.log(msg);
+
+
+        $scope.messages.push({
+            username: msg.name,
+            text: msg.text,
+            isMine: (msg.name == userData.username)
+        });
+        
+        
+        talkContainer.animate({
+            scrollTop: talkInnerContainer.height()
+        }, 200);
+    });
 
 });

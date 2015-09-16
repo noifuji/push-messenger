@@ -99,9 +99,8 @@
   margin: 7px;
   padding: 5px 10px;
   border-radius: 15px;
-  background: -webkit-linear-gradient(#ffffff, #dbdfe2);
-  background: linear-gradient(#ffffff, #dbdfe2);
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  background: #FCFAF2;
+  box-shadow: 0 0 0px rgba(0, 0, 0, 0);
 }
 
 .msg .txt:after {
@@ -109,9 +108,9 @@
   position: absolute;
   margin-top: -6px;
   top: 50%;
-  left: -16px;
+  left: -14px;
   border: solid 6px rgba(0, 0, 0, 0);
-  border-right: solid 10px #b9b9b9;
+  border-right: solid 10px #FCFAF2;
   width: 0;
   height: 0;
   content: "";
@@ -122,16 +121,15 @@
 }
 
 .msg.mine .txt {
-  background: -webkit-linear-gradient(#c7f377, #97d267);
-  background: linear-gradient(#c7f377, #97d267);
+  background: #C7DC68
 }
 
 .msg.mine .txt:after {
   top: 50%;
   left: auto;
-  right: -16px;
+  right: -14px;
   border: solid 6px rgba(0, 0, 0, 0);
-  border-left: solid 10px #b9b9b9;
+  border-left: solid 10px #C7DC68;
   width: 0;
   height: 0;
   content: "";

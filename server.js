@@ -38,23 +38,23 @@ io.on('connection', function(socket) {
   });
 
   socket.on('message', function(msg) {
-    var text = String(msg || '');
+    var text = String(msg.text || '');
 
-    if (!text)
+    if (!text) {
       return;
+    }
 
-    socket.get('name', function(err, name) {
+
       var data = {
-        name: name,
+        name: msg.username,
         text: text
       };
 
       broadcast('message', data);
       messages.push(data);
       
-      //Notifys a new message to all participants.
-      pushNotification();
-    });
+      //Notifys a new message to all participants.　うっとうしいのでいったんとめます!!
+      //pushNotification();
   });
 
   socket.on('identify', function(name) {

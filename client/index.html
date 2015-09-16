@@ -88,14 +88,14 @@
       </ons-toolbar>
       <div id="talk-container">
         <div id="talk-inner-container">
-          <div class="msg mine" ng-repeat="message in messages track by $index"><!--アニメーションを追加したい-->
-            <p class="txt">{{message}}</p>
+          <div class="msg"ng-class="{'mine' : message.isMine}" ng-repeat="message in messages track by $index"><!--アニメーションを追加したい-->
+            <p class="txt">{{message.text}}</p>
           </div>
         </div>
       </div>
       <footer id="global-footer">
         <div id="global-footer-form" class="form">
-          <input id="global-footer-form-txt" class="txt" type="text" ng-model="message"></input>
+          <input id="global-footer-form-txt" class="txt" type="text" ng-model="message.text"></input>
           <input id="global-footer-form-btn" class="btn submit" type="submit" value="送信" ng-click="send()" />
         </div>
       </footer>
