@@ -88,18 +88,38 @@ io.on('connection', function(socket) {
   });
   
   //Fix it!
-  socket.on('login', function(username) {
-    var user = [{"username" : "ryoma"}, {"username" : "hige"}, {"username" : "okaya"}];
+  socket.on('login', function(username, fn) {
+    var users = [{"id" : 1, "username" : "ryoma"  , "description" : "Hello!"                , "friends" : [2,3,4]   , "thumbnail" : "1.jpg"}
+              , {"id" : 2, "username" : "hige"   , "description" : "I love Samuragouchi."  , "friends" : [1,3,6,8]  , "thumbnail" : "2.jpg"}
+              , {"id" : 3, "username" : "okaya"  , "description" : "I'm tired."            , "friends" : [1,2,5,7]  , "thumbnail" : "3.jpg"}
+              , {"id" : 4, "username" : "Alice"  , "description" : "A"                     , "friends" : [1]        , "thumbnail" : "unknown.png"}
+              , {"id" : 5, "username" : "Bob"    , "description" : "B"                     , "friends" : [5]        , "thumbnail" : "unknown.png"}
+              , {"id" : 6, "username" : "Charlie", "description" : "C"                     , "friends" : [2]        , "thumbnail" : "unknown.png"}
+              , {"id" : 7, "username" : "Dan"    , "description" : "D"                     , "friends" : [3]        , "thumbnail" : "unknown.png"}
+              , {"id" : 8, "username" : "Eve"    , "description" : "E"                     , "friends" : [8]        , "thumbnail" : "unknown.png"}];
     
-    var loginFlag = false;
-    for(var i = 0; i < user.length; i++) {
-      if(user[i].username == username) {
-        loginFlag = true;
+    //ユーザの検索
+    var user = null;          
+    for(var i = 0; i < users.length; i++) {
+      if(users[i].username == username) {
+        user = users[i];
         break;
       }
     }
     
-    socket.emit('logged_in', loginFlag);
+    //ユーザーに紐付くフレンドを検索
+    if (user != null) {
+      for (var i = 0; i < user.friends.length; i++) {
+        for (var j = 0; j < users.length; j++) {
+          if (users[j].id == user.friends[i]) {
+            user.friends[i] = users[j];
+            break;
+          }
+        }
+      }
+    }
+    
+    fn(user);
   });
 
 });

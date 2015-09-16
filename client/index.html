@@ -18,12 +18,14 @@
 </head>
 
 <body>
+
   <ons-modal var="modal">
     <ons-icon icon="ion-load-c" spin="true"></ons-icon>
     <br>
     <br>Logging in.
     <br> Please wait.
   </ons-modal>
+
 
   <ons-navigator title="Navigator" var="myNavigator">
     <ons-page id='page_login' ng-controller="LoginController">
@@ -54,85 +56,49 @@
       </ons-toolbar>
 
       <ons-list>
-
-        <ons-list-item modifier="chevron" class="list-item-container" onclick="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
+        <ons-list-item ng-repeat='friend in userData.friends' modifier="chevron" class="list-item-container" ng-click="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
           <ons-row>
             <ons-col width="95px">
-              <img src="img/sax.jpg" class="thumbnail">
+              <img ng-src="img/{{friend.thumbnail}}" class="thumbnail">
             </ons-col>
             <ons-col>
               <div class="name">
-                ryoma
+                {{friend.username}}
               </div>
               <div class="desc">
-                Hello!
+                {{friend.description}}
               </div>
             </ons-col>
             <ons-col width="40px"></ons-col>
           </ons-row>
         </ons-list-item>
 
-        <ons-list-item modifier="chevron" class="list-item-container" onclick="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
-          <ons-row>
-            <ons-col width="95px">
-              <img src="img/gouchi.jpg" class="thumbnail">
-            </ons-col>
-            <ons-col>
-              <div class="name">
-                hige
-              </div>
-              <div class="desc">
-                I love Samuragouchi.
-              </div>
-            </ons-col>
-            <ons-col width="40px"></ons-col>
-          </ons-row>
-        </ons-list-item>
-
-        <ons-list-item modifier="chevron" class="list-item-container" onclick="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
-          <ons-row>
-            <ons-col width="95px">
-              <img src="img/icon.jpg" class="thumbnail">
-            </ons-col>
-            <ons-col>
-              <div class="name">
-                okaya
-              </div>
-              <div class="desc">
-                I'm tired.
-              </div>
-            </ons-col>
-            <ons-col width="40px"></ons-col>
-          </ons-row>
-        </ons-list-item>
+      </ons-list>
 
     </ons-page>
   </ons-template>
 
   <ons-template id="page2.html">
-    <ons-page>
+    <ons-page ng-controller="TalkRoomController">
       <ons-toolbar>
         <div class="left">
           <ons-back-button>Back</ons-back-button>
         </div>
         <div class="center">Talk</div>
       </ons-toolbar>
-
-      <ons-tabbar hide-tabs="hgoe">
-        <ons-tab>
-          <ons-row>
-            <ons-col width="80%">
-              <input type="text" class="text-input" ng-model="text" placeholder="Type here" style="display: block; width: 100%">
-            </ons-col>
-            <ons-col width="20%">
-              <ons-button style="display: block; width: 100%">Send</ons-button>
-            </ons-col>
-        </ons-tab>
-
-
-      </ons-tabbar>
-      Talk
-
+      <div id="talk-container">
+        <div id="talk-inner-container">
+          <div class="msg mine" ng-repeat="message in messages track by $index"><!--アニメーションを追加したい-->
+            <p class="txt">{{message}}</p>
+          </div>
+        </div>
+      </div>
+      <footer id="global-footer">
+        <div id="global-footer-form" class="form">
+          <input id="global-footer-form-txt" class="txt" type="text" ng-model="message"></input>
+          <input id="global-footer-form-btn" class="btn submit" type="submit" value="送信" ng-click="send()" />
+        </div>
+      </footer>
     </ons-page>
   </ons-template>
 </body>

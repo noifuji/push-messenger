@@ -27,3 +27,111 @@
   line-height: 1.2;
   font-size: 13px;
 }
+
+#talk-container {
+  position: absolute;
+  top: 0px;
+  bottom: 44px;
+  left: 0;
+  right: 0;
+  background: #e4eef7;
+  overflow: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+#global-footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 44px;
+  background: -webkit-linear-gradient(#e4ebf1, #b1b5b8);
+  background: linear-gradient(#e4ebf1, #b1b5b8);
+  box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  z-index: 10;
+}
+
+#global-footer .form {
+  position: relative;
+  margin: 0 auto;
+  width: 320px;
+}
+
+#global-footer .txt {
+  position: absolute;
+  border-color: rgba(0, 0, 0, 0.2);
+  top: 6px;
+  left: 10px;
+  border-radius: 9px;
+  width: 200px;
+  height: 24px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2) inset;
+  -webkit-appearance: none;
+}
+
+#global-footer .btn {
+  position: absolute;
+  padding: 0;
+  border-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  top: 7px;
+  right: 10px;
+  width: 50px;
+  height: 30px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  background: -webkit-linear-gradient(#4f94dd, #2a5da1);
+  background: linear-gradient(#4f94dd, #2a5da1);
+  -webkit-appearance: none;
+}
+
+.msg {
+  -webkit-transition: opacity .5s ease;
+  transition: opacity .5s ease;
+}
+
+.msg .txt {
+  display: inline-block;
+  position: relative;
+  margin: 7px;
+  padding: 5px 10px;
+  border-radius: 15px;
+  background: -webkit-linear-gradient(#ffffff, #dbdfe2);
+  background: linear-gradient(#ffffff, #dbdfe2);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+.msg .txt:after {
+  display: block;
+  position: absolute;
+  margin-top: -6px;
+  top: 50%;
+  left: -16px;
+  border: solid 6px rgba(0, 0, 0, 0);
+  border-right: solid 10px #b9b9b9;
+  width: 0;
+  height: 0;
+  content: "";
+}
+
+.msg.mine {
+  text-align: right;
+}
+
+.msg.mine .txt {
+  background: -webkit-linear-gradient(#c7f377, #97d267);
+  background: linear-gradient(#c7f377, #97d267);
+}
+
+.msg.mine .txt:after {
+  top: 50%;
+  left: auto;
+  right: -16px;
+  border: solid 6px rgba(0, 0, 0, 0);
+  border-left: solid 10px #b9b9b9;
+  width: 0;
+  height: 0;
+  content: "";
+}
