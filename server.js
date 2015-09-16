@@ -25,10 +25,6 @@ var messages = [];
 var sockets = [];
 var endpoints = [];
 
-router.get('/user/:userId', function (req, res) {
-  res.send('userId:' + req.params.userId + ",userName:");
-});
-
 io.on('connection', function(socket) {
   messages.forEach(function(data) {
     socket.emit('message', data);
