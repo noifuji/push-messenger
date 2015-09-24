@@ -20,9 +20,12 @@ messenger.factory('socket', function($rootScope) {
                     }
                 });
             })
+        },
+        removeAllListeners: function(eventName, callback) {
+            socket.removeAllListeners(eventName);
+            }
         }
-    };
-});
+    });
 
 messenger.factory('userData', function($rootScope) {
     return {
@@ -34,7 +37,28 @@ messenger.factory('userData', function($rootScope) {
     };
 });
 
-messenger.controller('LoginController', function($scope, socket, userData) {
+messenger.factory('talkData', function($rootScope) {
+    return {
+        roomid: "",
+        messages: [],
+        participants: []
+    };
+});
+
+messenger.directive('onFinishRender', function($timeout) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attr) {
+            if (scope.$last === true) {
+                $timeout(function() {
+                    scope.$emit('ngRepeatFinished');
+                });
+            }
+        }
+    }
+});
+
+messenger.controller('LoginController', function($scope, socket, userData, talkData) {
 
     var timeoutId = null;
     $scope.userData = userData;
@@ -42,6 +66,10 @@ messenger.controller('LoginController', function($scope, socket, userData) {
 
     socket.on('connect', function() {
         console.log("socket is connected");
+    });
+    
+    socket.on('test', function(items) {
+        console.log(items);
     });
 
     $scope.login = function login() {
@@ -79,26 +107,41 @@ messenger.controller('LoginController', function($scope, socket, userData) {
 });
 
 
-messenger.controller('FreindListController', function($scope, socket, userData) {
+messenger.controller('FreindListController', function($scope, socket, userData, talkData) {
     console.log("FreindListController is loaded");
-
     $scope.userData = userData;
+    $scope.talkData = talkData;
 
-    /*            $scope.users = [{"name":"ryoma", "desc":"frfrfrf", "icon":"sax.jpg"}
-                            ,{"name":"hige", "desc":"I love Samuragouchi.", "icon":"gouchi.jpg"}
-                            ,{"name":"okaya", "desc":"tired tired tired", "icon":"icon.jpg"}];*/
+    $scope.moveToTalkPage = function(index) {
+        var selectedItem = $scope.userData.friends[index];
+        $scope.talkData.roomid = generateRoomId([selectedItem.id, userData.id]);
+        
+        //履歴を取得する。
+        socket.emit('get_histry_messages', $scope.talkData.roomid, function(result) {
+            if (result != null) {
+                result.forEach(function(data) {
+                    data.isMine = (data.userid == userData.id);
+                });
+                $scope.talkData.messages = result;
+            }
+            
+        });
+        
+
+        //talkpageへ受け渡す情報を整理すること。
+
+
+        $scope.myNavigator.pushPage('page2.html', {
+            animation: 'slide'
+        });
+    }
 
 });
 
-messenger.controller('TalkRoomController', function($scope, socket, userData) {
+messenger.controller('TalkRoomController', function($scope, socket, userData, talkData) {
     console.log("TalkRoomController is loaded");
-
-    $scope.userData = userData
-    $scope.messages = [];
-    $scope.message = {
-        username: "",
-        text: ""
-    };
+    $scope.talkData = talkData;
+    $scope.text = "";
 
     var talkContainer = $('#talk-container');
     var talkInnerContainer = $('#talk-inner-container');
@@ -110,29 +153,60 @@ messenger.controller('TalkRoomController', function($scope, socket, userData) {
         textBox.focus();
 
         //空文字ははじく。
-        if ($scope.message.text != "") {
-            $scope.message.username = userData.username;
+        if ($scope.text != "") {
+            var message = {roomid : talkData.roomid,
+                           userid : userData.id,
+                           text   : $scope.text};
 
-            socket.emit('message', $scope.message);
+            socket.emit('message', message);
         }
-        $scope.message.text = "";
+        $scope.text = "";
     }
 
-    //messageオブジェクトの形式がサーバーとクライアントで異なっているので、修正する。
-    socket.on("message", function(msg) {
+    var receiveMessage = function(msg) {
         console.log(msg);
 
-
-        $scope.messages.push({
-            username: msg.name,
+        $scope.talkData.messages.push({
+            userid: msg.userid,
             text: msg.text,
-            isMine: (msg.name == userData.username)
+            isMine: (msg.userid == userData.id)
         });
-        
-        
+
+
         talkContainer.animate({
             scrollTop: talkInnerContainer.height()
-        }, 200);
+        }, 20);
+    }
+    socket.on("message", receiveMessage);
+
+    //メッセージのデータをすべて表示しきったら画面をスクロールする。
+    $scope.$on('ngRepeatFinished', function(ngRepeatFinishedEvent) {
+        talkContainer.animate({
+                scrollTop: talkInnerContainer.height()
+            }, 0);
     });
+    
+    //コントローラーが破棄される際に呼び出される。
+    $scope.$on('$destroy', function iVeBeenDismissed() {
+        //メッセージを受信するコールバックをすべて解除する。
+        socket.removeAllListeners("message", receiveMessage);
+    })
 
 });
+
+//とりあえずRoomId生成する
+function generateRoomId(userids) {
+    userids.sort(
+	function(a,b){
+    	if( a < b ) return -1;
+        if( a > b ) return 1;
+        return 0;
+    });
+    
+    var result = "";
+    userids.forEach(function(data) {
+        result = result + ("000"+data).slice(-4);
+    });
+    
+    return result;
+}

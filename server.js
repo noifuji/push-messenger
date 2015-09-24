@@ -10,6 +10,10 @@ var async = require('async');
 var socketio = require('socket.io');
 var express = require('express');
 
+var model = require('./model/model.js');
+var Users = model.Users;
+var Rooms = model.Rooms;
+
 //
 // ## SimpleServer `SimpleServer(obj)`
 //
@@ -28,53 +32,97 @@ var endpoints = [];
 io.on('connection', function(socket) {
   messages.forEach(function(data) {
     socket.emit('message', data);
+
   });
 
   sockets.push(socket);
 
   socket.on('disconnect', function() {
     sockets.splice(sockets.indexOf(socket), 1);
-    updateRoster();
+    //updateRoster();
+  });
+
+  socket.on('get_histry_messages', function(roomid, fn) {
+    Rooms.find({roomid : roomid}, function(err, rooms) {
+      if (err) {
+        console.log(err);
+        fn(null);
+        return;
+      }
+      
+      if(rooms.length == 1) {
+        fn(rooms[0].messages);
+      } else if(rooms.length == 0) {
+        //新規にルームを作成
+        var room = new Rooms();
+        room.roomid = roomid
+        room.participants = [];
+        room.messages = [];
+        room.save();
+        fn([]);
+      }
+      
+    });
   });
 
   socket.on('message', function(msg) {
     var text = String(msg.text || '');
+    
 
     if (!text) {
       return;
     }
 
+    var data = {
+      "userid": msg.userid,
+      "text": text
+    };
 
-      var data = {
-        name: msg.username,
-        text: text
-      };
+    console.log(text);
 
-      broadcast('message', data);
-      messages.push(data);
+    //全体送信しているのを、個別にそうしんできるようにする。
+    broadcast('message', data);
+    
+    //該当するルームの履歴を探し、DBを更新する。
+    Rooms.find({roomid : msg.roomid}, function(err, rooms) {
+      if (err) {
+        console.log(err);
+        return;
+      }
       
-      //Notifys a new message to all participants.　うっとうしいのでいったんとめます!!
-      //pushNotification();
+      var msgs = rooms[0].messages;
+      msgs.push(data);
+      Rooms.update({roomid : msg.roomid},{messages:msgs}, {upsert: true}, function(err) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+    });
+      
+    });
+
+    //Notifys a new message to all participants.　うっとうしいのでいったんとめます!!
+    //pushNotification();
   });
 
-  socket.on('identify', function(name) {
+/*  socket.on('identify', function(name) {
     socket.set('name', String(name || 'Anonymous'), function(err) {
       updateRoster();
     });
-  });
+  });*/
 
   //button pushed @should be deleted
   socket.on('request', function() {
     pushNotification();
   });
-  
+
   socket.on('register_endpoint', function(endpoint) {
     endpoints.push(endpoint);
-    endpoints = endpoints.filter(function (x, i, self) {
-            return self.indexOf(x) === i;
-        });
+    endpoints = endpoints.filter(function(x, i, self) {
+      return self.indexOf(x) === i;
+    });
   });
-  
+
   socket.on('delete_endpoint', function(endpoint) {
     for (var i = 0; i < endpoints.length; i++) {
       if (endpoints[i] == endpoint) {
@@ -82,45 +130,42 @@ io.on('connection', function(socket) {
       }
     }
   });
-  
+
   //Fix it!
   socket.on('login', function(username, fn) {
-    var users = [{"id" : 1, "username" : "ryoma"  , "description" : "Hello!"                , "friends" : [2,3,4]   , "thumbnail" : "1.jpg"}
-              , {"id" : 2, "username" : "hige"   , "description" : "I love Samuragouchi."  , "friends" : [1,3,6,8]  , "thumbnail" : "2.jpg"}
-              , {"id" : 3, "username" : "okaya"  , "description" : "I'm tired."            , "friends" : [1,2,5,7]  , "thumbnail" : "3.jpg"}
-              , {"id" : 4, "username" : "Alice"  , "description" : "A"                     , "friends" : [1]        , "thumbnail" : "unknown.png"}
-              , {"id" : 5, "username" : "Bob"    , "description" : "B"                     , "friends" : [5]        , "thumbnail" : "unknown.png"}
-              , {"id" : 6, "username" : "Charlie", "description" : "C"                     , "friends" : [2]        , "thumbnail" : "unknown.png"}
-              , {"id" : 7, "username" : "Dan"    , "description" : "D"                     , "friends" : [3]        , "thumbnail" : "unknown.png"}
-              , {"id" : 8, "username" : "Eve"    , "description" : "E"                     , "friends" : [8]        , "thumbnail" : "unknown.png"}];
-    
-    //ユーザの検索
-    var user = null;          
-    for(var i = 0; i < users.length; i++) {
-      if(users[i].username == username) {
-        user = users[i];
-        break;
+    //Usernameが一致するユーザーを検索する。
+    Users.find({'username': username}, function(err, users) {
+      if (err) {
+        console.log(err);
+        fn(null);
+        return;
       }
-    }
-    
-    //ユーザーに紐付くフレンドを検索
-    if (user != null) {
-      for (var i = 0; i < user.friends.length; i++) {
-        for (var j = 0; j < users.length; j++) {
-          if (users[j].id == user.friends[i]) {
-            user.friends[i] = users[j];
-            break;
-          }
+      
+      if(users.length != 1) {
+        fn(null);
+        return;
+      }
+      
+      var user = users[0];
+      
+      //friendsにはidしか入っていない。フレンドのユーザーidから情報を検索する。
+      Users.find( { 'id':{$in:user.friends}}, function(err, friends) {
+        if (err) {
+          console.log(err);
+          fn(null);
+          return;
         }
-      }
-    }
-    
-    fn(user);
+        
+        //具体的な情報をつめてクライアントへ返す。
+        user.friends = friends;
+        fn(user);
+      });
+    });
   });
 
 });
 
-function updateRoster() {
+/*function updateRoster() {
   async.map(
     sockets,
     function(socket, callback) {
@@ -130,9 +175,10 @@ function updateRoster() {
       broadcast('roster', names);
     }
   );
-}
+}*/
 
 function broadcast(event, data) {
+  console.log(sockets.length);
   sockets.forEach(function(socket) {
     socket.emit(event, data);
   });
@@ -141,38 +187,40 @@ function broadcast(event, data) {
 //Sends notification request to GCM server.
 function pushNotification() {
   var https = require('https');
-    
-    var headers = {
-      'Authorization': 'key=AIzaSyDDgYaIYetAHiJIoF_egwBJwGFSQgw29VI',
-      'Content-Type': 'application/json'
-    };
 
-    var jsonData = {"registration_ids": endpoints};
-    
-    var options = {
-      host: 'android.googleapis.com',
-      port: 443,
-      path: '/gcm/send',
-      method: 'POST',
-      headers: headers
-    };
+  var headers = {
+    'Authorization': 'key=AIzaSyDDgYaIYetAHiJIoF_egwBJwGFSQgw29VI',
+    'Content-Type': 'application/json'
+  };
 
-    var req = https.request(options, function(res) {
-      console.log('STATUS: ' + res.statusCode);
-      console.log('HEADERS: ' + JSON.stringify(res.headers));
-      res.setEncoding('utf8');
-      res.on('data', function(chunk) {
-        console.log('BODY: ' + chunk);
-      });
+  var jsonData = {
+    "registration_ids": endpoints
+  };
+
+  var options = {
+    host: 'android.googleapis.com',
+    port: 443,
+    path: '/gcm/send',
+    method: 'POST',
+    headers: headers
+  };
+
+  var req = https.request(options, function(res) {
+    console.log('STATUS: ' + res.statusCode);
+    console.log('HEADERS: ' + JSON.stringify(res.headers));
+    res.setEncoding('utf8');
+    res.on('data', function(chunk) {
+      console.log('BODY: ' + chunk);
     });
-    
-    req.on('error', function(e) {
-      console.log('problem with request: ' + e.message);
-    });
-    
-    req.write(JSON.stringify(jsonData));
-    console.log(req);
-    req.end();
+  });
+
+  req.on('error', function(e) {
+    console.log('problem with request: ' + e.message);
+  });
+
+  req.write(JSON.stringify(jsonData));
+  console.log(req);
+  req.end();
 }
 
 server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function() {

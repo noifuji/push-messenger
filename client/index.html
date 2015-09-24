@@ -56,7 +56,7 @@
       </ons-toolbar>
 
       <ons-list>
-        <ons-list-item ng-repeat='friend in userData.friends' modifier="chevron" class="list-item-container" ng-click="myNavigator.pushPage('page2.html', { animation : 'slide' } )">
+        <ons-list-item ng-repeat='friend in userData.friends' modifier="chevron" class="list-item-container" ng-click="moveToTalkPage($index)">
           <ons-row>
             <ons-col width="95px">
               <img ng-src="img/{{friend.thumbnail}}" class="thumbnail">
@@ -88,14 +88,14 @@
       </ons-toolbar>
       <div id="talk-container">
         <div id="talk-inner-container">
-          <div class="msg"ng-class="{'mine' : message.isMine}" ng-repeat="message in messages track by $index"><!--アニメーションを追加したい-->
+          <div class="msg"ng-class="{'mine' : message.isMine}" ng-repeat="message in talkData.messages track by $index" on-finish-render><!--アニメーションを追加したい-->
             <p class="txt">{{message.text}}</p>
           </div>
         </div>
       </div>
       <footer id="global-footer">
         <div id="global-footer-form" class="form">
-          <input id="global-footer-form-txt" class="txt" type="text" ng-model="message.text"></input>
+          <input id="global-footer-form-txt" class="txt" type="text" ng-model="text"></input>
           <input id="global-footer-form-btn" class="btn submit" type="submit" value="送信" ng-click="send()" />
         </div>
       </footer>

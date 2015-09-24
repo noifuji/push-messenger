@@ -38,7 +38,7 @@
 
         $scope.send = function send() {
           console.log('Sending message:', $scope.text);
-          socket.emit('message', $scope.text);
+          socket.emit('message', {username: $scope.name, text:$scope.text});
           $scope.text = '';
         };
 
