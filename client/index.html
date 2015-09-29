@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="robots" content="noindex">
+  <link rel="manifest" href="manifest.json">
+  
   <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsenui.css">
   <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsen-css-components.css">
 
@@ -40,6 +42,11 @@
 
         <ons-button type='submit' id='btn_login' ng-click="login()" modifier="light">
           Login
+        </ons-button>
+        
+        <ons-button type='submit' class='js-push-button' ng-click="pushSubscribe()" modifier="light">
+          Enable push messages
+          <!--{{isPushEnabled ? "Disble push messages" : "Enable push messages"}}-->
         </ons-button>
 
       </div>

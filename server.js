@@ -10,30 +10,21 @@ var async = require('async');
 var socketio = require('socket.io');
 var express = require('express');
 
+//モデルの定義
 var model = require('./model/model.js');
 var Users = model.Users;
 var Rooms = model.Rooms;
 
-//
-// ## SimpleServer `SimpleServer(obj)`
-//
-// Creates a new instance of SimpleServer with the following options:
-//  * `port` - The HTTP port to listen on. If `process.env.PORT` is set, _it overrides this value_.
-//
+
 var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
 
 router.use(express.static(path.resolve(__dirname, 'client')));
-var messages = [];
 var sockets = [];
 var endpoints = [];
 
 io.on('connection', function(socket) {
-  messages.forEach(function(data) {
-    socket.emit('message', data);
-
-  });
 
   sockets.push(socket);
 
@@ -41,8 +32,19 @@ io.on('connection', function(socket) {
     sockets.splice(sockets.indexOf(socket), 1);
     //updateRoster();
   });
+  
+  socket.on('leave_room', function(roomid, fn) {
+    socket.leave(roomid);
+    console.log("leave " + roomid)
+    
+  });
 
-  socket.on('get_histry_messages', function(roomid, fn) {
+  socket.on('join_room', function(roomid, fn) {
+    //ルーム入室
+    socket.join(roomid);
+    console.log("join " + roomid)
+    
+    //トークの履歴を取得
     Rooms.find({roomid : roomid}, function(err, rooms) {
       if (err) {
         console.log(err);
@@ -79,9 +81,11 @@ io.on('connection', function(socket) {
     };
 
     console.log(text);
+    console.log(socket.id);
 
     //全体送信しているのを、個別にそうしんできるようにする。
-    broadcast('message', data);
+    //broadcast('message', data);
+    io.to(msg.roomid).emit('message', data);
     
     //該当するルームの履歴を探し、DBを更新する。
     Rooms.find({roomid : msg.roomid}, function(err, rooms) {
@@ -101,18 +105,7 @@ io.on('connection', function(socket) {
       
     });
 
-    //Notifys a new message to all participants.　うっとうしいのでいったんとめます!!
-    //pushNotification();
-  });
-
-/*  socket.on('identify', function(name) {
-    socket.set('name', String(name || 'Anonymous'), function(err) {
-      updateRoster();
-    });
-  });*/
-
-  //button pushed @should be deleted
-  socket.on('request', function() {
+    //Notifys a new message to all participants.
     pushNotification();
   });
 
@@ -129,6 +122,7 @@ io.on('connection', function(socket) {
         endpoints.splice(i, 1);
       }
     }
+    console.log("endpoints length:" + endpoints.length);
   });
 
   //Fix it!
@@ -164,18 +158,6 @@ io.on('connection', function(socket) {
   });
 
 });
-
-/*function updateRoster() {
-  async.map(
-    sockets,
-    function(socket, callback) {
-      socket.get('name', callback);
-    },
-    function(err, names) {
-      broadcast('roster', names);
-    }
-  );
-}*/
 
 function broadcast(event, data) {
   console.log(sockets.length);

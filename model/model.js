@@ -28,6 +28,10 @@ var Users = new mongoose.Schema({
   thumbnail: {
     type: String,
     default: "unknown.png"
+  },
+  endpointids: {
+    type: Array, //ユーザーがもつ端末それぞれのidを無格納
+    default: []
   }
 });
 
