@@ -15,7 +15,6 @@ var model = require('./model/model.js');
 var Users = model.Users;
 var Rooms = model.Rooms;
 
-
 var router = express();
 var server = http.createServer(router);
 var io = socketio.listen(server);
@@ -24,20 +23,24 @@ router.use(express.static(path.resolve(__dirname, 'client')));
 var sockets = [];
 var endpoints = [];
 
+
+//Socket IO
 io.on('connection', function(socket) {
 
   sockets.push(socket);
 
+  //切断
   socket.on('disconnect', function() {
     sockets.splice(sockets.indexOf(socket), 1);
   });
 
+  //ルーム退出
   socket.on('leave_room', function(roomid, fn) {
     socket.leave(roomid);
     console.log("leave " + roomid)
-
   });
 
+  //ルーム入室
   socket.on('join_room', function(req, fn) {
     //ルーム入室
     socket.join(req.roomid);
@@ -47,15 +50,19 @@ io.on('connection', function(socket) {
     Rooms.find({
       roomid: req.roomid
     }, function(err, rooms) {
+
+      //ルーム検索エラー
       if (err) {
         console.log(err);
         fn(null);
         return;
       }
 
+      //ルーム検索成功
       if (rooms.length == 1) {
         fn(rooms[0].messages);
       }
+      //ルーム検索されない
       else if (rooms.length == 0) {
         //新規にルームを作成
         var room = new Rooms();
@@ -65,27 +72,31 @@ io.on('connection', function(socket) {
         room.save();
         fn([]);
       }
+      //ルーム検索異常
+      else {
+        console.log("There seems to be 2 or more rooms matched.");
+        fn(null);
+        return;
+      }
 
     });
   });
 
+  //メッセージ取得
   socket.on('message', function(msg) {
-    var text = String(msg.text || '');
 
-
-    if (!text) {
+    if (!String(msg.text || '')) {
       return;
     }
 
-    var data = {
-      "userid": msg.userid,
-      "text": text
-    };
+    if (!msg.text) {
+      return;
+    }
 
-    console.log(text);
+    console.log(msg.text);
     console.log(socket.id);
 
-    io.to(msg.roomid).emit('message', data);
+    io.to(msg.roomid).emit('message', msg);
 
     //該当するルームの履歴を探し、DBを更新する。
     Rooms.find({
@@ -97,7 +108,7 @@ io.on('connection', function(socket) {
       }
 
       var msgs = rooms[0].messages;
-      msgs.push(data);
+      msgs.push(msg);
       Rooms.update({
         roomid: msg.roomid
       }, {
@@ -110,7 +121,6 @@ io.on('connection', function(socket) {
           return;
         }
       });
-
 
       //ルームの参加者から通知先のendpointidを取得する。
       Users.find({
@@ -125,13 +135,13 @@ io.on('connection', function(socket) {
 
         var pushEndpoints = [];
         participants.forEach(function(user) {
-          if (msg.userid != user.id) {//自分には通知を送らない
+          if (msg.userid != user.id) { //自分には通知を送らない
             user.endpointids.forEach(function(endpointid) {
               pushEndpoints.push(endpointid);
             });
           }
         });
-        
+
         //通知
         pushNotification(pushEndpoints);
       });
@@ -154,7 +164,7 @@ io.on('connection', function(socket) {
       endpointids = endpointids.filter(function(x, i, self) {
         return self.indexOf(x) === i;
       });
-      
+
       Users.update({
         id: req.userid
       }, {
@@ -167,10 +177,11 @@ io.on('connection', function(socket) {
           return;
         }
       });
-      
+
     });
   });
 
+  //エンドポイント削除
   socket.on('delete_endpoint', function(endpoint) {
     for (var i = 0; i < endpoints.length; i++) {
       if (endpoints[i] == endpoint) {
@@ -180,7 +191,7 @@ io.on('connection', function(socket) {
     console.log("endpoints length:" + endpoints.length);
   });
 
-
+  //ログイン
   socket.on('login', function(username, fn) {
     //Usernameが一致するユーザーを検索する。
     Users.find({
@@ -215,7 +226,7 @@ io.on('connection', function(socket) {
         user.friends = friends;
         fn(user);
       });*/
-      
+
       //@一時的に全ユーザーをし返す
       Users.find(function(err, friends) {
         if (err) {
@@ -230,25 +241,31 @@ io.on('connection', function(socket) {
       });
     });
   });
-  
+
+  //登録
   socket.on('signup', function(req, fn) {
     Users.find({
-        'username': req.username
-      }, function(err, users) {
-        if (err) {
-          console.log(err);
-          fn(null);
-          return;
-        }
+      'username': req.username
+    }, function(err, users) {
+      if (err) {
+        console.log(err);
+        fn(null);
+        return;
+      }
 
-        //ユーザー名がかぶってたらだめ
-        if(users.length > 0) {
-          fn(null);
-          return;
+      //ユーザー名がかぶってたらだめ
+      if (users.length > 0) {
+        fn(null);
+        return;
+      }
+
+      Users.findOne({
+        $query: {},
+        $orderby: {
+          id: -1
         }
-        
-        Users.findOne({$query:{},$orderby:{id:-1}}, function(err, user) {
-      var newUser = new Users();
+      }, function(err, user) {
+        var newUser = new Users();
         newUser.id = (user ? user.id + 1 : 1);
         newUser.username = req.username;
         newUser.description = "new User";
@@ -261,12 +278,12 @@ io.on('connection', function(socket) {
           }
           fn(user);
         });
-    });
       });
+    });
   });
-
 });
 
+//消していい
 function broadcast(event, data) {
   console.log(sockets.length);
   sockets.forEach(function(socket) {
