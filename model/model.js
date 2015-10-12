@@ -12,7 +12,7 @@ function validator(v) {
 
 var Users = new mongoose.Schema({
   id   : {
-    type: Number, validate: [validator, "Empty Error"]
+    type: Number
   },
   username   : {
     type: String, validate: [validator, "Empty Error"]

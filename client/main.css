@@ -134,3 +134,12 @@
   height: 0;
   content: "";
 }
+
+ons-dialog p {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+input {
+  width: 100%;
+}

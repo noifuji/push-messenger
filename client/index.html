@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex">
   <link rel="manifest" href="manifest.json">
-  
+
   <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsenui.css">
   <link rel="stylesheet prefetch" href="bower_components/onsenui/build/css/onsen-css-components.css">
 
@@ -43,15 +43,43 @@
         <ons-button type='submit' id='btn_login' ng-click="login()" modifier="light">
           Login
         </ons-button>
-        
+
         <ons-button type='submit' class='js-push-button' ng-click="pushSubscribe()" modifier="light">
           Enable push messages
           <!--{{isPushEnabled ? "Disble push messages" : "Enable push messages"}}-->
         </ons-button>
 
+        <ons-button type='submit' ng-click="show('login.html')" modifier="light">
+          Signup
+        </ons-button>
+
       </div>
     </ons-page>
   </ons-navigator>
+  
+  
+
+  <ons-template id="login.html">
+    <ons-dialog var="dialog" cancelable ng-controller="SignupController">
+
+      <ons-toolbar inline>
+        <div class="center">
+          Signup
+        </div>
+      </ons-toolbar>
+
+      <p>
+        <input placeholder="Username" ng-model='username' class="text-input">
+      </p>
+
+      <p>
+        <ons-button modifier="large" ng-click="signup()">Signup</ons-button>
+      </p>
+
+    </ons-dialog>
+  </ons-template>
+  
+  
 
   <ons-template id="page1.html">
     <ons-page ng-controller="FreindListController">
@@ -95,7 +123,8 @@
       </ons-toolbar>
       <div id="talk-container">
         <div id="talk-inner-container">
-          <div class="msg"ng-class="{'mine' : message.isMine}" ng-repeat="message in talkData.messages track by $index" on-finish-render><!--アニメーションを追加したい-->
+          <div class="msg" ng-class="{'mine' : message.isMine}" ng-repeat="message in talkData.messages track by $index" on-finish-render>
+            <!--アニメーションを追加したい-->
             <p class="txt">{{message.text}}</p>
           </div>
         </div>

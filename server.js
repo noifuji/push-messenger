@@ -30,46 +30,48 @@ io.on('connection', function(socket) {
 
   socket.on('disconnect', function() {
     sockets.splice(sockets.indexOf(socket), 1);
-    //updateRoster();
   });
-  
+
   socket.on('leave_room', function(roomid, fn) {
     socket.leave(roomid);
     console.log("leave " + roomid)
-    
+
   });
 
-  socket.on('join_room', function(roomid, fn) {
+  socket.on('join_room', function(req, fn) {
     //ルーム入室
-    socket.join(roomid);
-    console.log("join " + roomid)
-    
+    socket.join(req.roomid);
+    console.log("join " + req.roomid)
+
     //トークの履歴を取得
-    Rooms.find({roomid : roomid}, function(err, rooms) {
+    Rooms.find({
+      roomid: req.roomid
+    }, function(err, rooms) {
       if (err) {
         console.log(err);
         fn(null);
         return;
       }
-      
-      if(rooms.length == 1) {
+
+      if (rooms.length == 1) {
         fn(rooms[0].messages);
-      } else if(rooms.length == 0) {
+      }
+      else if (rooms.length == 0) {
         //新規にルームを作成
         var room = new Rooms();
-        room.roomid = roomid
-        room.participants = [];
+        room.roomid = req.roomid
+        room.participants = req.participants;
         room.messages = [];
         room.save();
         fn([]);
       }
-      
+
     });
   });
 
   socket.on('message', function(msg) {
     var text = String(msg.text || '');
-    
+
 
     if (!text) {
       return;
@@ -83,36 +85,89 @@ io.on('connection', function(socket) {
     console.log(text);
     console.log(socket.id);
 
-    //全体送信しているのを、個別にそうしんできるようにする。
-    //broadcast('message', data);
     io.to(msg.roomid).emit('message', data);
-    
+
     //該当するルームの履歴を探し、DBを更新する。
-    Rooms.find({roomid : msg.roomid}, function(err, rooms) {
+    Rooms.find({
+      roomid: msg.roomid
+    }, function(err, rooms) {
       if (err) {
         console.log(err);
         return;
       }
-      
+
       var msgs = rooms[0].messages;
       msgs.push(data);
-      Rooms.update({roomid : msg.roomid},{messages:msgs}, {upsert: true}, function(err) {
+      Rooms.update({
+        roomid: msg.roomid
+      }, {
+        messages: msgs
+      }, {
+        upsert: true
+      }, function(err) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+      });
+
+
+      //ルームの参加者から通知先のendpointidを取得する。
+      Users.find({
+        'id': {
+          $in: rooms[0].participants
+        }
+      }, function(err, participants) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        var pushEndpoints = [];
+        participants.forEach(function(user) {
+          if (msg.userid != user.id) {//自分には通知を送らない
+            user.endpointids.forEach(function(endpointid) {
+              pushEndpoints.push(endpointid);
+            });
+          }
+        });
+        
+        //通知
+        pushNotification(pushEndpoints);
+      });
+
+    });
+
+  });
+
+  socket.on('register_endpoint', function(req) {
+    //idに一致するユーザーを検索。
+    Users.find({
+      'id': req.userid
+    }, function(err, users) {
       if (err) {
         console.log(err);
         return;
       }
-    });
+      var endpointids = users[0].endpointids;
+      endpointids.push(req.endpoint);
+      endpointids = endpointids.filter(function(x, i, self) {
+        return self.indexOf(x) === i;
+      });
       
-    });
-
-    //Notifys a new message to all participants.
-    pushNotification();
-  });
-
-  socket.on('register_endpoint', function(endpoint) {
-    endpoints.push(endpoint);
-    endpoints = endpoints.filter(function(x, i, self) {
-      return self.indexOf(x) === i;
+      Users.update({
+        id: req.userid
+      }, {
+        endpointids: endpointids
+      }, {
+        upsert: true
+      }, function(err) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+      });
+      
     });
   });
 
@@ -125,36 +180,89 @@ io.on('connection', function(socket) {
     console.log("endpoints length:" + endpoints.length);
   });
 
-  //Fix it!
+
   socket.on('login', function(username, fn) {
     //Usernameが一致するユーザーを検索する。
-    Users.find({'username': username}, function(err, users) {
+    Users.find({
+      'username': username
+    }, function(err, users) {
       if (err) {
         console.log(err);
         fn(null);
         return;
       }
-      
-      if(users.length != 1) {
+
+      if (users.length != 1) {
         fn(null);
         return;
       }
-      
+
       var user = users[0];
-      
+
       //friendsにはidしか入っていない。フレンドのユーザーidから情報を検索する。
-      Users.find( { 'id':{$in:user.friends}}, function(err, friends) {
+      /*Users.find({
+        'id': {
+          $in: user.friends
+        }
+      }, function(err, friends) {
         if (err) {
           console.log(err);
           fn(null);
           return;
         }
-        
+
+        //具体的な情報をつめてクライアントへ返す。
+        user.friends = friends;
+        fn(user);
+      });*/
+      
+      //@一時的に全ユーザーをし返す
+      Users.find(function(err, friends) {
+        if (err) {
+          console.log(err);
+          fn(null);
+          return;
+        }
+
         //具体的な情報をつめてクライアントへ返す。
         user.friends = friends;
         fn(user);
       });
     });
+  });
+  
+  socket.on('signup', function(req, fn) {
+    Users.find({
+        'username': req.username
+      }, function(err, users) {
+        if (err) {
+          console.log(err);
+          fn(null);
+          return;
+        }
+
+        //ユーザー名がかぶってたらだめ
+        if(users.length > 0) {
+          fn(null);
+          return;
+        }
+        
+        Users.findOne({$query:{},$orderby:{id:-1}}, function(err, user) {
+      var newUser = new Users();
+        newUser.id = (user ? user.id + 1 : 1);
+        newUser.username = req.username;
+        newUser.description = "new User";
+        newUser.friends = [];
+        newUser.thumbnail = "unknown.png";
+        newUser.endpointids = [];
+        newUser.save(function(err, user) {
+          if (err != null) {
+            console.log(err);
+          }
+          fn(user);
+        });
+    });
+      });
   });
 
 });
@@ -167,7 +275,7 @@ function broadcast(event, data) {
 }
 
 //Sends notification request to GCM server.
-function pushNotification() {
+function pushNotification(endpoints) {
   var https = require('https');
 
   var headers = {

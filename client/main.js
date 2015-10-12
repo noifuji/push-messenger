@@ -62,8 +62,22 @@ messenger.controller('LoginController', function($scope, socket, userData, talkD
 
     var timeoutId = null;
     $scope.userData = userData;
-    $scope.username = "ryoma";
+    $scope.username = "";
     //$scope.isPushEnabled = false;
+
+    $scope.dialogs = {};
+
+    $scope.show = function(dlg) {
+        if (!$scope.dialogs[dlg]) {
+            ons.createDialog(dlg).then(function(dialog) {
+                $scope.dialogs[dlg] = dialog;
+                dialog.show();
+            });
+        }
+        else {
+            $scope.dialogs[dlg].show();
+        }
+    }
 
     socket.on('connect', function() {
         console.log("socket is connected");
@@ -114,7 +128,7 @@ messenger.controller('LoginController', function($scope, socket, userData, talkD
             unsubscribe(socket);
         }
         else {
-            subscribe(socket);
+            //subscribe(socket);
         }
     };
 
@@ -125,6 +139,28 @@ messenger.controller('LoginController', function($scope, socket, userData, talkD
             alert("Timed out");
         }, 6000);
     }
+});
+
+messenger.controller('SignupController', function($scope, socket, userData, talkData) {
+    console.log("SignupController is loaded");
+    $scope.userData = userData;
+    $scope.talkData = talkData;
+    $scope.username = "";
+    
+    $scope.signup = function signup() {
+        console.log($scope.username);
+        socket.emit('signup', {username : $scope.username}, function(result) {
+            if (result != null) {
+                subscribe(socket, result.id);
+                $scope.dialog.hide();
+            } else {
+                console.log("This username is already used.");
+            }
+        });
+        
+        
+    };
+
 });
 
 
@@ -139,7 +175,7 @@ messenger.controller('FreindListController', function($scope, socket, userData, 
         $scope.talkData.roomid = generateRoomId([selectedItem.id, userData.id]);
 
         //ルームへ入室する。//TalkRoomControllerの初期処理でやってもいいかも
-        socket.emit('join_room', $scope.talkData.roomid, function(result) {
+        socket.emit('join_room', {roomid : $scope.talkData.roomid, participants : [selectedItem.id, userData.id]}, function(result) {
             if (result != null) {
                 result.forEach(function(data) {
                     data.isMine = (data.userid == userData.id);
@@ -290,7 +326,7 @@ function initialiseState(socket) {
                 //return subscription;
 
                 // Keep your server in sync with the latest subscriptionId
-                sendEndpointToServer(socket, subscription);
+                //sendEndpointToServer(socket, subscription);
 
                 // Set your UI to show they have subscribed for
                 // push messages
@@ -304,7 +340,7 @@ function initialiseState(socket) {
 }
 
 //@引数でなくかえりちにする?
-function subscribe(socket) {
+function subscribe(socket, userid) {
     // Disable the button so it can't be changed while
     // we process the permission request
     var pushButton = document.querySelector('.js-push-button');
@@ -323,7 +359,7 @@ function subscribe(socket) {
                 // TODO: Send the subscription.subscriptionId and 
                 // subscription.endpoint to your server
                 // and save it to send a push message at a later date
-                sendEndpointToServer(socket, subscription);
+                sendEndpointToServer(socket, subscription, userid);
 
             })
             .catch(function(e) {
@@ -418,9 +454,9 @@ function getEndpoint(pushSubscription) {
 }
 
 //Sends request to register the endpoint.
-function sendEndpointToServer(socket, subscription) {
+function sendEndpointToServer(socket, subscription, userid) {
     var endpoint = getEndpoint(subscription);
-    socket.emit('register_endpoint', endpoint);
+    socket.emit('register_endpoint', {userid : userid, endpoint: endpoint});
 }
 
 //Sends request to delete the endpoint on the server.
