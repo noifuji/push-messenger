@@ -85,6 +85,7 @@ io.on('connection', function(socket) {
   //メッセージ取得
   socket.on('message', function(msg) {
 
+    //メッセージがない
     if (!String(msg.text || '')) {
       return;
     }
@@ -96,6 +97,7 @@ io.on('connection', function(socket) {
     console.log(msg.text);
     console.log(socket.id);
 
+    //メッセージ送信
     io.to(msg.roomid).emit('message', msg);
 
     //該当するルームの履歴を探し、DBを更新する。
@@ -150,8 +152,9 @@ io.on('connection', function(socket) {
 
   });
 
+  //エンドポイント(ブラウザ固有のIDのこと？)登録処理
   socket.on('register_endpoint', function(req) {
-    //idに一致するユーザーを検索。
+    //idに一致するユーザーを検索
     Users.find({
       'id': req.userid
     }, function(err, users) {
