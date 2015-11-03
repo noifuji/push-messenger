@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- jQueryを読み込む -->
+    <script src="./lib/jquery/jquery-2.0.3.js"></script>
+    <!-- GoogleMapsAPIを読み込む -->
+    <script type="text/javascript" src="https://maps.google.com/maps/api/js?libraries=geometry&amp;sensor=false"></script>
+    <!-- gmaps.jsを読み込む -->
+    <script type="text/javascript" src="./lib/gmaps.js"></script>
+
+  <script src="/socket.io/socket.io.js"></script>
+    <!-- hifiveを読み込む -->
+<script type="text/javascript" src="./lib/h5/ejs-1.0.h5mod.js"></script>
+<script type="text/javascript" src="./lib/h5/h5-1.1.8.js"></script>
+    <!-- map.cssをインクルード -->
+    <link rel="stylesheet" href="map.css">
+    <!-- ここで作成したjsファイルを読み込む -->
+    <script type="text/javascript" src="map.js"></script>
+
+    <title>Scribble Guide</title>
+
+</head>
+<!--タブパネル全体を定義-->
+<div id="tabs">
+
+    <!--コンテンツ領域を準備-->
+    <!-- GoogleMaps -->
+    <div id="googlemaps" class="ui-body ui-body-z">
+        <div data-role="navbar">
+            <div id="container">
+                <div id='map'></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>
