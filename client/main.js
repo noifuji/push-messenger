@@ -214,7 +214,7 @@ messenger.controller('TalkRoomController', function($scope, socket, userData, ta
                 text: $scope.text
             };
 
-            socket.emit('message', message);
+            socket.emit('send_message', message);
         }
         $scope.text = "";
     }
