@@ -61,11 +61,12 @@ io.on('connection', function(socket) {
             }
             //ルーム検索成功
             else if (rooms.length == 1) {
-                console.log("fetch messages of the room " + join_request.roomid)
+                console.log("fetch previous messages of the room " + join_request.roomid)
                 done(rooms[0].messages);
             }
             //ルーム検索されない
             else if (rooms.length == 0) {
+                console.log("create new room " + join_request.roomid)
                 //新規ルームを作成する
                 var room = new Rooms({
                     roomid: join_request.roomid,
@@ -90,18 +91,20 @@ io.on('connection', function(socket) {
 
         //メッセージがない
         if (!String(msg.text || '')) {
+            console.log(msg.text);
             return;
         }
 
         if (!msg.text) {
+            console.log(msg.text);
             return;
         }
 
-        console.log(msg.text);
-        console.log(socket.id);
+        //console.log(msg.text);
+        //console.log(socket.id);
 
-        //メッセージ送信
-        io.to(msg.roomid).emit('message', msg);
+        //同じ部屋のメンバにメッセージを送信
+        io.to(msg.roomid).emit('multicast', msg);
 
         //該当するルームの履歴を探し、DBを更新する。
         Rooms.find({

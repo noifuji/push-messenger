@@ -235,7 +235,7 @@ messenger.controller('TalkRoomController', function($scope, socket, userData, ta
             scrollTop: talkInnerContainer.height()
         }, 20);
     }
-    socket.on("message", receiveMessage);
+    socket.on("multicast", receiveMessage);
 
     //メッセージのデータをすべて表示しきったら画面をスクロールする。
     $scope.$on('ngRepeatFinished', function(ngRepeatFinishedEvent) {
@@ -247,7 +247,7 @@ messenger.controller('TalkRoomController', function($scope, socket, userData, ta
     //コントローラーが破棄される際に呼び出される。
     $scope.$on('$destroy', function iVeBeenDismissed() {
         //メッセージを受信するコールバックをすべて解除する。
-        socket.removeAllListeners("message", receiveMessage);
+        socket.removeAllListeners("multicast", receiveMessage);
 
 
         //ルームから退室する
