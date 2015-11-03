@@ -150,7 +150,6 @@ io.on('connection', function(socket) {
                 //通知
                 pushNotification(pushEndpoints);
             });
-
         });
 
     });
@@ -170,7 +169,6 @@ io.on('connection', function(socket) {
             endpointids = endpointids.filter(function(x, i, self) {
                 return self.indexOf(x) === i;
             });
-
             Users.update({
                 id: req.userid
             }, {
@@ -183,7 +181,6 @@ io.on('connection', function(socket) {
                     return;
                 }
             });
-
         });
     });
 
@@ -286,6 +283,13 @@ io.on('connection', function(socket) {
                 });
             });
         });
+    });
+
+    socket.on('test', function(req, fn) {
+        io.to("1234").emit('test_msg_rec', req);
+    });
+    socket.on('test_join', function(req, fn) {
+        socket.join(req);
     });
 });
 

@@ -93,11 +93,7 @@ messenger.controller('LoginController', function($scope, socket, userData, talkD
             console.warn('Service workers aren\'t supported in this browser.'); //@alert 
         }
     });
-
-    socket.on('test', function(items) {
-        console.log(items);
-    });
-
+    
     $scope.login = function login() {
         $scope.showModal();
         console.log('Sending username:' + $scope.username);
@@ -146,19 +142,22 @@ messenger.controller('SignupController', function($scope, socket, userData, talk
     $scope.userData = userData;
     $scope.talkData = talkData;
     $scope.username = "";
-    
+
     $scope.signup = function signup() {
         console.log($scope.username);
-        socket.emit('signup', {username : $scope.username}, function(result) {
+        socket.emit('signup', {
+            username: $scope.username
+        }, function(result) {
             if (result != null) {
                 subscribe(socket, result.id);
                 $scope.dialog.hide();
-            } else {
+            }
+            else {
                 console.log("This username is already used.");
             }
         });
-        
-        
+
+
     };
 
 });
@@ -175,7 +174,10 @@ messenger.controller('FreindListController', function($scope, socket, userData, 
         $scope.talkData.roomid = generateRoomId([selectedItem.id, userData.id]);
 
         //ルームへ入室する。//TalkRoomControllerの初期処理でやってもいいかも
-        socket.emit('join_room', {roomid : $scope.talkData.roomid, participants : [selectedItem.id, userData.id]}, function(result) {
+        socket.emit('join_room', {
+            roomid: $scope.talkData.roomid,
+            participants: [selectedItem.id, userData.id]
+        }, function(result) {
             if (result != null) {
                 result.forEach(function(data) {
                     data.isMine = (data.userid == userData.id);
@@ -456,7 +458,10 @@ function getEndpoint(pushSubscription) {
 //Sends request to register the endpoint.
 function sendEndpointToServer(socket, subscription, userid) {
     var endpoint = getEndpoint(subscription);
-    socket.emit('register_endpoint', {userid : userid, endpoint: endpoint});
+    socket.emit('register_endpoint', {
+        userid: userid,
+        endpoint: endpoint
+    });
 }
 
 //Sends request to delete the endpoint on the server.

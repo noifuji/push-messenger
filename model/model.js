@@ -30,7 +30,7 @@ var Users = new mongoose.Schema({
     default: "unknown.png"
   },
   endpointids: {
-    type: Array, //ユーザーがもつ端末それぞれのidを無格納
+    type: Array, //ユーザーがもつ端末それぞれのidを格納
     default: []
   }
 });
