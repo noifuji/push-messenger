@@ -44,10 +44,10 @@
           Login
         </ons-button>
 
-        <ons-button type='submit' class='js-push-button' ng-click="pushSubscribe()" modifier="light">
+        <!--<ons-button type='submit' class='js-push-button' ng-click="pushSubscribe()" modifier="light">
           Enable push messages
-          <!--{{isPushEnabled ? "Disble push messages" : "Enable push messages"}}-->
-        </ons-button>
+          {{isPushEnabled ? "Disble push messages" : "Enable push messages"}}
+        </ons-button>-->
 
         <ons-button type='submit' ng-click="show('login.html')" modifier="light">
           Signup
@@ -79,7 +79,25 @@
     </ons-dialog>
   </ons-template>
   
-  
+  <ons-template id="addfriend.html">
+    <ons-dialog var="dialog" cancelable ng-controller="AddFriendController">
+
+      <ons-toolbar inline>
+        <div class="center">
+          Add a Friend
+        </div>
+      </ons-toolbar>
+
+      <p>
+        <input placeholder="Username" ng-model='friendname' class="text-input">
+      </p>
+
+      <p>
+        <ons-button modifier="large" ng-click="addFriend()">Add</ons-button>
+      </p>
+
+    </ons-dialog>
+  </ons-template>
 
   <ons-template id="page1.html">
     <ons-page ng-controller="FreindListController">
@@ -88,6 +106,11 @@
           <ons-back-button>Back</ons-back-button>
         </div>
         <div class="center">Friend List</div>
+        <div class="right">
+        <ons-toolbar-button>
+          <ons-icon icon="ion-plus" ng-click="show('addfriend.html')" style="font-size: 32px; width: 1em">
+        </ons-toolbar-button>
+      </div>
       </ons-toolbar>
 
       <ons-list>

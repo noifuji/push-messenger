@@ -67,7 +67,7 @@ io.on('connection', function(socket) {
             //ルーム検索されない
             else if (rooms.length == 0) {
                 console.log("create new room " + join_request.roomid)
-                //新規ルームを作成する
+                    //新規ルームを作成する
                 var room = new Rooms({
                     roomid: join_request.roomid,
                     participants: join_request.participants
@@ -217,7 +217,7 @@ io.on('connection', function(socket) {
             var user = users[0];
 
             //friendsにはidしか入っていない。フレンドのユーザーidから情報を検索する。
-            /*Users.find({
+            Users.find({
               'id': {
                 $in: user.friends
               }
@@ -231,10 +231,10 @@ io.on('connection', function(socket) {
               //具体的な情報をつめてクライアントへ返す。
               user.friends = friends;
               fn(user);
-            });*/
+            });
 
             //@一時的に全ユーザーをし返す
-            Users.find(function(err, friends) {
+            /*Users.find(function(err, friends) {
                 if (err) {
                     console.log(err);
                     fn(null);
@@ -244,7 +244,7 @@ io.on('connection', function(socket) {
                 //具体的な情報をつめてクライアントへ返す。
                 user.friends = friends;
                 fn(user);
-            });
+            });*/
         });
     });
 
@@ -265,6 +265,8 @@ io.on('connection', function(socket) {
                 return;
             }
 
+            //最新のidを取得する。
+            //maxとか方法があるのでは?
             Users.findOne({
                 $query: {},
                 $orderby: {
@@ -285,6 +287,68 @@ io.on('connection', function(socket) {
                     fn(user);
                 });
             });
+        });
+    });
+
+    //フレンドの登録
+    socket.on('add_friend', function(req, fn) {
+        console.log(req.userData.username + "," + req.friendname);
+        //まずフレンドが存在するかをチェック
+        Users.find({
+            'username': req.friendname
+        }, function(err, users) {
+            if (err) {
+                console.log(err);
+                fn(null);
+                return;
+            }
+            
+            //フレンドが1人ヒットした場合以外はエラー
+            if(users.length != 1) {
+                fn(null)
+                return;
+            }
+            var friend = users[0];
+
+            //ユーザーの検索を行う
+            Users.findOne({
+                'id': req.userData.id
+            }, function(err, user) {
+                if (err) {
+                    console.log(err);
+                    fn(null);
+                    return;
+                }
+
+                //すでに登録済みでないか確認する
+                for (var i = 0; i < user.friends.length; i++) {
+                    if (user.friends[i] == friend.id) {
+                        fn(null);
+                        return;
+                    }
+                }
+
+                //相互にフレンドになる
+                user.friends.push(friend.id);
+                friend.friends.push(user.id);
+
+                Users.update({
+                    id: user.id
+                }, user, {
+                    upsert: true
+                }, function(err) {});
+                
+                Users.update({
+                    id: friend.id
+                }, friend, {
+                    upsert: true
+                }, function(err) {});
+
+                fn("OK");
+                socket.emit('friend_added', "");
+            });
+
+
         });
     });
 

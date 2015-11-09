@@ -167,6 +167,7 @@ messenger.controller('FreindListController', function($scope, socket, userData, 
     console.log("FreindListController is loaded");
     $scope.userData = userData;
     $scope.talkData = talkData;
+    $scope.dialogs = {};
 
     //トーク用ページへ遷移する
     $scope.moveToTalkPage = function(index) {
@@ -191,6 +192,43 @@ messenger.controller('FreindListController', function($scope, socket, userData, 
             animation: 'slide'
         });
     }
+    
+    $scope.show = function(dlg) {
+        if (!$scope.dialogs[dlg]) {
+            ons.createDialog(dlg).then(function(dialog) {
+                $scope.dialogs[dlg] = dialog;
+                dialog.show();
+            });
+        }
+        else {
+            $scope.dialogs[dlg].show();
+        }
+    }
+
+});
+
+messenger.controller('AddFriendController', function($scope, socket, userData, talkData) {
+    console.log("AddFriendController is loaded");
+    $scope.userData = userData;
+    $scope.talkData = talkData;
+
+    $scope.addFriend = function addFriend() {
+        socket.emit('add_friend', {
+            userData: $scope.userData,
+            friendname: $scope.friendname
+        }, function(result) {
+            if (result != null) {
+                console.log(result);
+                $scope.userData = result;
+                $scope.dialog.hide();
+            }
+            else {
+                console.log("Something is wrong to add your friend.");
+            }
+        });
+
+
+    };
 
 });
 
