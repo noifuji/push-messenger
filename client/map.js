@@ -1,9 +1,15 @@
+// システム
 var ws; // webSocketオブジェクト
+var mapMode = "draw"; // googleMapsのモード
+var windowEdgeMargin = 40;
+var panPixel = 100;
+var overLayArray = [];
+
+//部屋
 var roommates = ""; // 部屋の接続人数
 var room_id = ""; // 部屋ID
-var mapMode = "draw"; // googleMapsのモード
-var content; // 吹き出しの中身
-var myInfoWindow; // 吹き出しのオブジェクト
+
+//描画
 var lockFlagZoom = false; // アンロック状態
 var lockFlagMove = false;
 var gDrawFlag = false; //アンロック状態
@@ -13,12 +19,16 @@ var prevX = 0;
 var prevY = 0;
 var wsTmpLat = null;
 var wsTmpLng = null;
+var previousLatLng = null;
+
+//吹き出し
+var content; // 吹き出しの中身
+var myInfoWindow; // 吹き出しのオブジェクト
+
+//マーカー
 var markerLat = null;
 var markerLng = null;
-var previousLatLng = null;
-var windowEdgeMargin = 40;
-var panPixel = 100;
-var overLayArray = [];
+
 
 // 画面端判定
 function isWithinMapEdgeMargin(x, y) {
@@ -30,31 +40,38 @@ function isWithinMapEdgeMargin(x, y) {
     }
 }
 
-function whichEdgeMargin(x, y){
-	if(x < windowEdgeMargin){
-		if(y < windowEdgeMargin){
-			return "NW";
-		}else if(y < ($("#map").height() - windowEdgeMargin)){
-			return "W";
-		}else{
-			return "SW";
-		}
-	}else if(x >= windowEdgeMargin && x < ($("#map").width() - windowEdgeMargin)){
-			if(y < windowEdgeMargin){
-				return "N";
-			}else if(y >= $("#map").height() -windowEdgeMargin){
-				return "S";
-			}
-		}else if(x > $("#map").width()-windowEdgeMargin){
-			if(y < windowEdgeMargin){
-				return "NE";
-			}else if(y >= windowEdgeMargin && y < $("#map").height() - windowEdgeMargin){
-				return "E";
-			}else if(y >= $("#map").height() - windowEdgeMargin){
-				return "SE";
-			}
+function whichEdgeMargin(x, y) {
+    if (x < windowEdgeMargin) {
+        if (y < windowEdgeMargin) {
+            return "NW";
+        }
+        else if (y < ($("#map").height() - windowEdgeMargin)) {
+            return "W";
+        }
+        else {
+            return "SW";
+        }
+    }
+    else if (x >= windowEdgeMargin && x < ($("#map").width() - windowEdgeMargin)) {
+        if (y < windowEdgeMargin) {
+            return "N";
+        }
+        else if (y >= $("#map").height() - windowEdgeMargin) {
+            return "S";
+        }
+    }
+    else if (x > $("#map").width() - windowEdgeMargin) {
+        if (y < windowEdgeMargin) {
+            return "NE";
+        }
+        else if (y >= windowEdgeMargin && y < $("#map").height() - windowEdgeMargin) {
+            return "E";
+        }
+        else if (y >= $("#map").height() - windowEdgeMargin) {
+            return "SE";
+        }
 
-		}
+    }
 }
 
 
@@ -98,27 +115,54 @@ $(function() {
                     // += lat
                     // + "\n" + lng + "\n";
 
+                    // 線アイコン(破線)
+                    var DashedLine = {
+                        path: 'M 0,-1 0,1',
+                        strokeOpacity: 0.7, //透明度
+                    };
+
+                    // 線の座標設定
                     var from = new google.maps.LatLng(
                         parseFloat(this.wsTmpLat),
                         parseFloat(this.wsTmpLng));
                     var to = new google.maps.LatLng(
                         parseFloat(lat),
                         parseFloat(lng));
-
                     var linePath = [from, to];
+
                     // Polyline オブジェクト
-                    ln = new google.maps.Polyline({
+                    line = new google.maps.Polyline({
                         path: linePath, // ポリラインの配列
-                        strokeColor: '#136FFF', // 色（#RRGGBB形式）
-                        strokeOpacity: 0.7, // 透明度
+                        icons: [{ // アイコン(破線)
+                            icon: DashedLine,
+                            offset: '0',
+                            repeat: '20px'
+                        }],
+                        strokeColor: '#00008b', // 色（#RRGGBB形式）
+                        strokeOpacity: 0, // 透明度
                         // 0.0～1.0（デフォルト）
                         strokeWeight: 2.5, // 太さ（単位ピクセル）
                         clickable: false
                     });
 
-                    ln.setMap(map.map);
-                    overLayArray[overLayArray.length] = ln;
+                    line.setMap(map.map);
+                    overLayArray[overLayArray.length] = line;
                     distance += google.maps.geometry.spherical.computeDistanceBetween(from, to);
+                    
+                    // アニメーション
+                    animateLine(line);
+                    
+                    //アニメーション関数
+                    function animateLine(line) {
+                        var count = 0;
+                        window.setInterval(function() {
+                            count = (count + 1) % 200;
+
+                            var icons = line.get('icons');
+                            icons[0].offset = (count / 2) + '%';
+                            line.set('icons', icons);
+                        }, 20);
+                    };
                 }
                 // document.getElementById("chatMessage").textContent
                 // += this.wsTmpLat
@@ -370,7 +414,7 @@ $(function() {
     // 一時的な座標情報
     // var tmpLat = 35.658613;
     // var tmpLng = 139.745525;
-    // var ln = null;
+    // var line = null;
     // マウスが動いたら処理
     google.maps.event.addListener(map.map, 'mousemove',
         function(e) {
